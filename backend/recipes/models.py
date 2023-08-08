@@ -14,6 +14,12 @@ class Ingredient(models.Model):
     )
 
     class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['name', 'measurement_unit'],
+                name='unique_ingredient'
+            )
+        ]
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
 
@@ -70,12 +76,13 @@ class Recipe(models.Model):
         'Картинка',
         upload_to='recipe_images/',
         blank=True,
+        null=True,
     )
     text = models.TextField(
         'Описание',
     )
     cooking_time = models.PositiveSmallIntegerField(
-        'Время приготовления',
+        'Время приготовления (минуты)',
     )
     pub_date = models.DateTimeField(
         "Дата публикации",
@@ -95,13 +102,13 @@ class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name='ingredients',
+        related_name='ingredients_ri',
         verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name='recipes',
+        related_name='recipes_ri',
         verbose_name='Ингредиент'
     )
     amount = models.IntegerField(

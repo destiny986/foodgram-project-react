@@ -4,6 +4,13 @@ from django.shortcuts import get_object_or_404
 
 from recipes.models import Recipe
 from users.models import User, Follow
+from recipes.models import Ingredient
+
+
+# ================================================================================================================
+#               User
+# ================================================================================================================
+
 
 class UserCreateSerializer(UserCreateSerializer):
     class Meta:
@@ -23,6 +30,8 @@ class UserGetSerializer(UserSerializer):
         return request_user.is_authenticated and Follow.objects.filter(user=request_user, author=author).exists()
 
 
+# ================================================================================================================
+#               Follow
 # ================================================================================================================
 
 
@@ -77,19 +86,28 @@ class FollowCreateDeleteSerializer(ModelSerializer):
  
     def validate(self, data):
         if data['user'] == data['author']:
-            raise ValidationError(
-                'Нельзя подписаться на самого себя'
-            )
+            raise ValidationError('Нельзя подписаться на самого себя')
         return data
     
     # дочерний
     def to_representation(self, instance):
         request = self.context.get('request')
         author = instance['author']
-        return FollowSerializer(
-            author,
-            context={'request': request}
-        ).data
+        return FollowSerializer(author, context={'request': request}).data
 
 # OrderedDict([('user', <User: destiny986>), ('author', <User: test1>)])
+
+
 # ================================================================================================================
+#               Ingredient
+# ================================================================================================================
+
+
+class IngredientsSerializer(ModelSerializer):
+    class Meta:
+        model = Ingredient
+        fields = ('id', 'name', 'measurement_unit')
+
+
+class TagSerializer(ModelSerializer):
+    ...

@@ -2,7 +2,7 @@ from djoser.serializers import UserCreateSerializer, UserSerializer, ValidationE
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator
 from django.shortcuts import get_object_or_404
 
-from recipes.models import Recipe
+from recipes.models import Recipe, Tag
 from users.models import User, Follow
 from recipes.models import Ingredient
 
@@ -110,4 +110,6 @@ class IngredientsSerializer(ModelSerializer):
 
 
 class TagSerializer(ModelSerializer):
-    ...
+    class Meta:
+        model = Tag
+        fields = ('id', 'name', 'color', 'slug')

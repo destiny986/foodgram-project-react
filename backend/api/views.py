@@ -101,9 +101,4 @@ class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
-    filter_backends = (DjangoFilterBackend, OrderingFilter, IngredientFilter)
     pagination_class = None
-    search_fields = ['^name',]  # '@' Full-text search. (Currently only supported Django's PostgreSQL backend.)
-                                # '$' Regex search.
-    ordering = ('name',)
-

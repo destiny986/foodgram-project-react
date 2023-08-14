@@ -3,8 +3,15 @@ from django.db import models
 from users.models import User
 
 
+# https://stackoverflow.com/questions/36330677/django-model-set-default-charfield-in-lowercase
+# будем сохранять в lowercase все NameField
+class NameField(models.CharField):
+
+    def get_prep_value(self, value):
+        return str(value).lower()
+
 class Ingredient(models.Model):
-    name = models.CharField(
+    name = NameField(
         'Название ингредиента',
         max_length=255,
     )
@@ -29,7 +36,7 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    name = models.CharField(
+    name = NameField(
         'Название тега',
         max_length=255,
         unique=True
@@ -48,6 +55,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        ordering = ['name']
 
     def __str__(self):
         return self.name

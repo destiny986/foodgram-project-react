@@ -23,7 +23,7 @@ class FollowViewSet(ReadOnlyModelViewSet):
 class FollowUserViewSet(UserViewSet):
     @action(detail=True, methods=['post'], name='Create follow')
     def subscribe(self, request, *args, **kwargs):
-        author = get_object_or_404(User, id=kwargs['id'])
+        author = get_object_or_404(User, id=kwargs['id'])               # проверит на наличие автора
         serializer = FollowCreateDeleteSerializer(
             data={'user': request.user.id, 'author': author.id},
             context={'request': request}

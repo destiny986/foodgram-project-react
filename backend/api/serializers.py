@@ -1,5 +1,6 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer, ValidationError
 from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator
+from django.shortcuts import get_object_or_404
 
 from recipes.models import Recipe
 from users.models import User, Follow
@@ -11,9 +12,15 @@ class UserCreateSerializer(UserCreateSerializer):
 
 
 class UserGetSerializer(UserSerializer):
+    is_subscribed = SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed')
+
+    def get_is_subscribed(self, author):
+        request_user = self.context['request'].user
+        return request_user.is_authenticated and Follow.objects.filter(user=request_user, author=author).exists()
 
 
 # ================================================================================================================
@@ -27,20 +34,37 @@ class FollowRecipeSerializer(ModelSerializer):
 
 
 class FollowSerializer(ModelSerializer):
-    recipes = FollowRecipeSerializer(many=True)
+    recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()     # посчитаем количество рецептов того пользователя на которого подписан
+    is_subscribed = SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'recipes', 'recipes_count')
+        fields = ('email', 'id', 'username', 'first_name', 'last_name', 'is_subscribed', 'recipes', 'recipes_count')
 
-    def get_recipes_count(self, obj):           # obj == User
-        return obj.recipes.count()
+    def get_recipes_count(self, author):
+        return author.recipes.count()
+    
+    def get_is_subscribed(self, author):
+        request_user = self.context['request'].user
+        return request_user.is_authenticated and Follow.objects.filter(user=request_user, author=author).exists()
+    
+    def get_recipes(self, author):
+        request = self.context['request']
+        limit = request.query_params.get('recipes_limit')           # вернет none если нет параметра
+        if limit is None:
+            recipes = author.recipes.all()
+        else:
+            try:
+                limit = int(limit)
+                recipes = author.recipes.all()[:limit]
+            except:
+                recipes = author.recipes.all()
+        return FollowRecipeSerializer(recipes, many=True).data
 
 
 class FollowCreateDeleteSerializer(ModelSerializer):
     class Meta:
-        # extra_kwargs = {'user': {'required': False}, 'author': {'required': False}}
         model = Follow
         fields = ('user', 'author')
         validators = [
@@ -58,5 +82,14 @@ class FollowCreateDeleteSerializer(ModelSerializer):
             )
         return data
     
+    # дочерний
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        author = instance['author']
+        return FollowSerializer(
+            author,
+            context={'request': request}
+        ).data
 
+# OrderedDict([('user', <User: destiny986>), ('author', <User: test1>)])
 # ================================================================================================================

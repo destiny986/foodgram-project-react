@@ -1,8 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer, ValidationError
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator, IntegerField, CharField
 from django.shortcuts import get_object_or_404
 
-from recipes.models import Recipe, Tag
+from recipes.models import Recipe, Tag, RecipeIngredient
 from users.models import User, Follow
 from recipes.models import Ingredient
 
@@ -109,7 +109,44 @@ class IngredientsSerializer(ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
+# ================================================================================================================
+#               Tag
+# ================================================================================================================
+
+
 class TagSerializer(ModelSerializer):
     class Meta:
         model = Tag
         fields = ('id', 'name', 'color', 'slug')
+
+
+# ================================================================================================================
+#               Recipe
+# ================================================================================================================
+
+#               GET
+
+class RecipeIngredientSerializer(ModelSerializer):  # передал в него модель RecipeIngredient
+    id = IntegerField(source='ingredient.id')
+    name = CharField(source='ingredient.name')
+    measurement_unit = CharField(source='ingredient.measurement_unit')
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'name', 'measurement_unit', 'amount', )
+
+
+class RecipeGetSerializer(ModelSerializer):         # передал в него рецепт
+    tags = TagSerializer(many=True)
+    author = UserGetSerializer()
+    ingredients = RecipeIngredientSerializer(many=True, source='ingredients_in_recipes') # все RecipeIngredient в которых есть этот recipe
+
+    class Meta:
+        model = Recipe
+        fields = ('id', 'tags', 'author', 'ingredients', 'name', 'image', 'text', 'cooking_time')
+
+#               POST
+
+# https://stackoverflow.com/questions/47851965/django-rest-framework-serializer-source-giving-weird-required-error
+class RecipePostSerializer(ModelSerializer):
+    ...

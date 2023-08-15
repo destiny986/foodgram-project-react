@@ -12,9 +12,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters2
 from rest_framework.filters import OrderingFilter, SearchFilter
 
-from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer
+from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer
 from users.models import Follow, User
-from recipes.models import Ingredient, Tag
+from recipes.models import Ingredient, Tag, Recipe
 
 
 # ================================================================================================================
@@ -55,6 +55,7 @@ class FollowUserViewSet(UserViewSet):
 #               Ingredient
 # ================================================================================================================
 
+
 '''
 # https://stackoverflow.com/questions/45296939/how-can-i-create-a-partial-search-filter-in-django-rest-framework
 class IngredientFilter(filters.FilterSet):
@@ -92,13 +93,29 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
                                 # '$' Regex search.
 
 
-
 # ================================================================================================================
 #               Tags
 # ================================================================================================================
+
 
 class TagViewSet(ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (AllowAny,)
     pagination_class = None
+
+
+# ================================================================================================================
+#               Recipes
+# ================================================================================================================
+
+
+class RecipesViewSet(ModelViewSet):
+    queryset = Recipe.objects.all()
+    permission_classes = (AllowAny,)
+    http_method_names = ['get', 'post', 'patch', 'delete']
+
+    def get_serializer_class(self):
+        if self.action in ('retrieve', 'list'):
+            return RecipeGetSerializer
+        return RecipePostSerializer

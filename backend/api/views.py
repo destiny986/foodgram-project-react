@@ -12,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters2
 from rest_framework.filters import OrderingFilter, SearchFilter
 
+from .permissions import CustomPermission
 from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer
 from users.models import Follow, User
 from recipes.models import Ingredient, Tag, Recipe
@@ -112,7 +113,7 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 class RecipesViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (AllowAny,)
+    permission_classes = (CustomPermission,)
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):

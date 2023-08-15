@@ -1,6 +1,8 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer, ValidationError
-from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator, IntegerField, CharField
+from rest_framework.serializers import ModelSerializer, SerializerMethodField, UniqueTogetherValidator, IntegerField, CharField, ImageField, PrimaryKeyRelatedField
 from django.shortcuts import get_object_or_404
+import base64
+from django.core.files.base import ContentFile
 
 from recipes.models import Recipe, Tag, RecipeIngredient
 from users.models import User, Follow
@@ -126,7 +128,7 @@ class TagSerializer(ModelSerializer):
 
 #               GET
 
-class RecipeIngredientSerializer(ModelSerializer):  # передал в него модель RecipeIngredient
+class RecipeIngredientGetSerializer(ModelSerializer):  # передал в него RecipeIngredient
     id = IntegerField(source='ingredient.id')
     name = CharField(source='ingredient.name')
     measurement_unit = CharField(source='ingredient.measurement_unit')
@@ -139,14 +141,83 @@ class RecipeIngredientSerializer(ModelSerializer):  # передал в него
 class RecipeGetSerializer(ModelSerializer):         # передал в него рецепт
     tags = TagSerializer(many=True)
     author = UserGetSerializer()
-    ingredients = RecipeIngredientSerializer(many=True, source='ingredients_in_recipes') # все RecipeIngredient в которых есть этот recipe
+    ingredients = RecipeIngredientGetSerializer(many=True, source='ingredients_in_recipes') # все RecipeIngredient в которых есть этот recipe
 
     class Meta:
         model = Recipe
         fields = ('id', 'tags', 'author', 'ingredients', 'name', 'image', 'text', 'cooking_time')
 
+
 #               POST
 
-# https://stackoverflow.com/questions/47851965/django-rest-framework-serializer-source-giving-weird-required-error
+
+class RecipeIngredientPostSerializer(ModelSerializer):
+    id = IntegerField()
+    amount = IntegerField()
+
+    class Meta:
+        model = RecipeIngredient
+        fields = ('id', 'amount')
+
+class Base64ImageField(ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+        return super().to_internal_value(data)
+
 class RecipePostSerializer(ModelSerializer):
-    ...
+    ingredients = RecipeIngredientPostSerializer(many=True, source='ingredients_in_recipes')
+    tags = PrimaryKeyRelatedField(many=True, queryset=Tag.objects.all())
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time')
+
+
+    def create(self, validated_data):
+        print('=================================================')
+        print(validated_data)
+        print('=================================================')
+        ingredients = validated_data.pop('ingredients_in_recipes')
+        tags = validated_data.pop('tags')
+        author = self.context.get('request').user
+
+        # To create and save an object in a single step, use the create() method
+        recipe = Recipe.objects.create(author=author, **validated_data)
+        recipe.tags.set(tags)
+        for ingredient in ingredients:
+            ingredient_obj = get_object_or_404(Ingredient, id=ingredient.get('id'))
+            amount = ingredient.get('amount')
+            RecipeIngredient.objects.create(recipe=recipe, ingredient=ingredient_obj, amount=amount)
+        recipe.save()
+
+        return recipe
+
+
+    def update(self, instance, validated_data):
+
+        new_tags = validated_data.pop('tags')
+        instance.tags.clear()
+        for tag in new_tags:
+            tag_obj = get_object_or_404(Tag, id=tag.id)
+            instance.tags.add(tag_obj)
+
+        new_ingredients = validated_data.pop('ingredients_in_recipes')
+        instance.ingredients.clear()
+        for ingredient in new_ingredients:
+            ingredient_obj = get_object_or_404(Ingredient, id=ingredient.get('id'))
+            amount = ingredient.get('amount')
+            instance.ingredients.add(ingredient_obj, through_defaults={'amount': amount})
+
+        super().update(instance, validated_data)        # name, image, text, cooking_time
+
+        instance.save()
+        return instance
+
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return RecipeGetSerializer(instance, context={'request': request}).data

@@ -13,9 +13,9 @@ from django_filters import rest_framework as filters2
 from rest_framework.filters import OrderingFilter, SearchFilter
 
 from .permissions import CustomPermission
-from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer
+from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer, FavoriteSerializer, ShoppingListSerializer
 from users.models import Follow, User
-from recipes.models import Ingredient, Tag, Recipe
+from recipes.models import Ingredient, Tag, Recipe, Favorite, ShoppingList
 
 
 # ================================================================================================================
@@ -120,3 +120,55 @@ class RecipesViewSet(ModelViewSet):
         if self.action in ('retrieve', 'list'):
             return RecipeGetSerializer
         return RecipePostSerializer
+
+    @action(detail=True, methods=['post'], name='Create favorite')
+    def favorite(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        serializer = FavoriteSerializer(
+            data={'user': request.user.id, 'recipe': recipe.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        Favorite.objects.create(user=request.user, recipe=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @favorite.mapping.delete
+    def destroy_favorite(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
+        favorite = get_object_or_404(Favorite, user=request.user, recipe=recipe)
+        favorite.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+# ==============================================================================================
+
+    @action(detail=True, methods=['post'], name='Take recipe to shopping list')
+    def shopping_cart(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        serializer = ShoppingListSerializer(
+            data={'user': request.user.id, 'recipe': recipe.id},
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        ShoppingList.objects.create(user=request.user, recipe=recipe)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @shopping_cart.mapping.delete
+    def destroy_shopping_cart(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=self.kwargs.get('pk'))
+        shoppinglist = get_object_or_404(ShoppingList, user=request.user, recipe=recipe)
+        shoppinglist.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+
+    @action(detail=False, methods=['get'], name='Download shopping list')
+    def download_shopping_cart(self, request, *args, **kwargs):
+        shoping_lists = ShoppingList.objects.filter(user=request.user)
+        recipes_in_shoping_list = []
+        for list in shoping_lists:
+            recipes_in_shoping_list.append(list.recipe)
+            
+        ingredients_to_steal = []
+        for recipe in recipes_in_shoping_list:
+            ...
+
+        

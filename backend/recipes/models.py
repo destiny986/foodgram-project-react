@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from users.models import User
 
@@ -9,6 +10,13 @@ class NameField(models.CharField):
 
     def get_prep_value(self, value):
         return str(value).lower()
+    
+def positive_not_zero(value):
+    if value <= 0:
+        raise ValidationError(
+            ('Значение должно быть не меньше 1'),
+            params={'value': value},
+        )
 
 class Ingredient(models.Model):
     name = NameField(
@@ -92,6 +100,7 @@ class Recipe(models.Model):
     )
     cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления (минуты)',
+        validators=[positive_not_zero]
     )
     pub_date = models.DateTimeField(
         "Дата публикации",
@@ -120,13 +129,20 @@ class RecipeIngredient(models.Model):
         related_name='recipes_for_ingredient',
         verbose_name='Ингредиент'
     )
-    amount = models.IntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество',
+        validators=[positive_not_zero]
     )
 
     class Meta:
         verbose_name = 'Ингредиент в рецепте'
         verbose_name_plural = 'Ингредиенты в рецепте'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_ingredient_in_recipe'
+            )
+        ]
 
     def __str__(self):
         return f'{self.ingredient.name} - {self.amount} {self.ingredient.measurement_unit}'
@@ -145,13 +161,8 @@ class Favorite(models.Model):
         related_name='favorites',
         verbose_name='Избранные рецепты',
     )
-    add_date = models.DateTimeField(
-        "Дата добавления в избранное",
-        auto_now_add=True,
-    )
 
     class Meta:
-        ordering = ['-add_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'recipe'],

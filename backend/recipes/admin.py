@@ -30,9 +30,9 @@ class RecipeIngredientAdmin(admin.ModelAdmin):
 
 
 class FavoriteAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'user', 'recipe', 'add_date')
-    search_fields = ('user', 'recipe', 'add_date')
-    list_filter = ('user', 'recipe', 'add_date')
+    list_display = ('pk', 'user', 'recipe')
+    search_fields = ('user', 'recipe')
+    list_filter = ('user', 'recipe')
 
 
 class ShoppingListAdmin(admin.ModelAdmin):

@@ -14,6 +14,7 @@ from rest_framework.filters import OrderingFilter, SearchFilter
 from django.db.models import Sum
 from django.shortcuts import HttpResponse
 from rest_framework.permissions import IsAuthenticated
+from django_filters.rest_framework import FilterSet, ModelMultipleChoiceFilter, BooleanFilter
 
 from .permissions import CustomPermission
 from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer, FavoriteSerializer, ShoppingListSerializer
@@ -113,11 +114,42 @@ class TagViewSet(ReadOnlyModelViewSet):
 #               Recipes
 # ================================================================================================================
 
+#############################################################################################
+#############################################################################################
+#############################################################################################
+#############################################################################################
+#vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+class RecipeFilterSet(FilterSet):
+    is_favorited = BooleanFilter(method='get_is_favorited')     # value - True/False
+    is_in_shopping_cart = BooleanFilter(method='get_is_in_shopping_cart')
+    tags = ModelMultipleChoiceFilter(queryset=Tag.objects.all(), field_name='tags__slug', to_field_name='slug')
+
+    class Meta:
+        model = Recipe
+        fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags')
+
+    def get_is_favorited(self, queryset, name, value):
+        if value == True:
+            return Recipe.objects.filter(favorites__user=self.request.user)
+        return Recipe.objects.exclude(favorites__user=self.request.user)
+
+    def get_is_in_shopping_cart(self, queryset, name, value):
+        if value == True:
+            return Recipe.objects.filter(shoppinglist__user=self.request.user)
+        return Recipe.objects.exclude(shoppinglist__user=self.request.user)
+    
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#############################################################################################
+#############################################################################################
+#############################################################################################
+#############################################################################################
 
 class RecipesViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (CustomPermission,)
     http_method_names = ['get', 'post', 'patch', 'delete']
+    filter_backends = (DjangoFilterBackend, )
+    filterset_class = RecipeFilterSet
 
     def get_serializer_class(self):
         if self.action in ('retrieve', 'list'):

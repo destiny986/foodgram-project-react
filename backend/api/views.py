@@ -11,11 +11,14 @@ from rest_framework.permissions import AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django_filters import rest_framework as filters2
 from rest_framework.filters import OrderingFilter, SearchFilter
+from django.db.models import Sum
+from django.shortcuts import HttpResponse
+from rest_framework.permissions import IsAuthenticated
 
 from .permissions import CustomPermission
 from .serializers import FollowSerializer, FollowCreateDeleteSerializer, IngredientsSerializer, TagSerializer, RecipeGetSerializer, RecipePostSerializer, FavoriteSerializer, ShoppingListSerializer
 from users.models import Follow, User
-from recipes.models import Ingredient, Tag, Recipe, Favorite, ShoppingList
+from recipes.models import Ingredient, Tag, Recipe, Favorite, ShoppingList, RecipeIngredient
 
 
 # ================================================================================================================
@@ -160,15 +163,22 @@ class RecipesViewSet(ModelViewSet):
         return Response(status=status.HTTP_204_NO_CONTENT)
     
 
-    @action(detail=False, methods=['get'], name='Download shopping list')
+    # CustomPermission тут, чтение всем разрешено
+    @action(detail=False, methods=['get'], name='Download shopping list', permission_classes=[IsAuthenticated, ])
     def download_shopping_cart(self, request, *args, **kwargs):
-        shoping_lists = ShoppingList.objects.filter(user=request.user)
-        recipes_in_shoping_list = []
-        for list in shoping_lists:
-            recipes_in_shoping_list.append(list.recipe)
-            
-        ingredients_to_steal = []
-        for recipe in recipes_in_shoping_list:
-            ...
-
         
+        # https://stackoverflow.com/questions/69426522/aggregate-sum-in-django-sum-of-objects-with-the-same-name
+        shopping_list = RecipeIngredient.objects.filter(
+            recipe__shoppinglist__user=request.user).values(
+            'ingredient__name',
+            'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount')).order_by()
+
+        result = ['Список покупок:\n',]
+        for ingredient in shopping_list:
+            string = ' '.join(str(i) for i in list(ingredient.values()))
+            result.append(f'\n{string}')
+
+        response = HttpResponse(result, content_type='text/plain')
+        response['Content-Disposition'] = 'attachment; filename="shopping_cart.txt"'
+        return response

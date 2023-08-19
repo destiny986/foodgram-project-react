@@ -9,18 +9,25 @@ from users.models import User, Follow
 from recipes.models import Ingredient
 
 
-# ================================================================================================================
+# ===========================================================================
 #               User
-# ================================================================================================================
-
+# ===========================================================================
 
 class UserCreateSerializer(UserCreateSerializer):
+    '''
+    Сериализатор для создания пользователя (Djoser).
+    Переопределен в settings.
+    '''
     class Meta:
         model = User
         fields = ('email', 'id', 'username', 'first_name', 'last_name', 'password')
 
 
 class UserGetSerializer(UserSerializer):
+    '''
+    Сериализатор для получения пользователей (Djoser).
+    Переопределен в settings.
+    '''
     is_subscribed = SerializerMethodField()
 
     class Meta:
@@ -29,17 +36,18 @@ class UserGetSerializer(UserSerializer):
 
     def get_is_subscribed(self, author):
         request_user = self.context['request'].user
-        # если первая часть false, вторую не будет читать, user=AnonymousUser ошибки не будет, вернет False
         return request_user.is_authenticated and Follow.objects.filter(user=request_user, author=author).exists()
 
 
-# ================================================================================================================
+# ===========================================================================
 #               Follow
-# ================================================================================================================
-
+# ===========================================================================
 
 class SmallRecipeSerializer(ModelSerializer):
-# Краткий серик, в фоллоу вызывается, избранном и корзине
+    '''
+    Сериализатор с меньшим количеством полей.
+    Вызывается в Follow, Favorite и ShoppingList.
+    '''
     class Meta:
         model = Recipe
         fields = ('id', 'name', 'image', 'cooking_time')
@@ -47,7 +55,7 @@ class SmallRecipeSerializer(ModelSerializer):
 
 class FollowSerializer(ModelSerializer):
     recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()     # посчитаем количество рецептов того пользователя на которого подписан
+    recipes_count = SerializerMethodField()
     is_subscribed = SerializerMethodField()
 
     class Meta:
@@ -63,7 +71,8 @@ class FollowSerializer(ModelSerializer):
     
     def get_recipes(self, author):
         request = self.context['request']
-        limit = request.query_params.get('recipes_limit')           # вернет none если нет параметра
+        limit = request.query_params.get('recipes_limit')
+        # Вернет None если нет параметра
         if limit is None:
             recipes = author.recipes.all()
         else:
@@ -92,19 +101,15 @@ class FollowCreateDeleteSerializer(ModelSerializer):
             raise ValidationError('Нельзя подписаться на самого себя')
         return data
     
-    # дочерний
     def to_representation(self, instance):
         request = self.context.get('request')
         author = instance['author']
         return FollowSerializer(author, context={'request': request}).data
 
-# OrderedDict([('user', <User: destiny986>), ('author', <User: test1>)])
 
-
-# ================================================================================================================
+# ===========================================================================
 #               Ingredient
-# ================================================================================================================
-
+# ===========================================================================
 
 class IngredientsSerializer(ModelSerializer):
     class Meta:
@@ -112,10 +117,9 @@ class IngredientsSerializer(ModelSerializer):
         fields = ('id', 'name', 'measurement_unit')
 
 
-# ================================================================================================================
+# ===========================================================================
 #               Tag
-# ================================================================================================================
-
+# ===========================================================================
 
 class TagSerializer(ModelSerializer):
     class Meta:
@@ -123,13 +127,15 @@ class TagSerializer(ModelSerializer):
         fields = ('id', 'name', 'color', 'slug')
 
 
-# ================================================================================================================
+# ===========================================================================
 #               Recipe
-# ================================================================================================================
+# ===========================================================================
 
-#               GET
-
-class RecipeIngredientGetSerializer(ModelSerializer):  # передал в него RecipeIngredient
+class RecipeIngredientGetSerializer(ModelSerializer):
+    '''
+    Сериализатор ингредиентов в рецепте.
+    Вызвается в получении рецепта.
+    '''
     id = IntegerField(source='ingredient.id')
     name = CharField(source='ingredient.name')
     measurement_unit = CharField(source='ingredient.measurement_unit')
@@ -139,10 +145,11 @@ class RecipeIngredientGetSerializer(ModelSerializer):  # передал в не�
         fields = ('id', 'name', 'measurement_unit', 'amount', )
 
 
-class RecipeGetSerializer(ModelSerializer):         # передал в него рецепт
+class RecipeGetSerializer(ModelSerializer):
     tags = TagSerializer(many=True)
     author = UserGetSerializer()
-    ingredients = RecipeIngredientGetSerializer(many=True, source='ingredients_in_recipes') # все RecipeIngredient в которых есть этот recipe
+    # Все RecipeIngredient в которых есть этот recipe
+    ingredients = RecipeIngredientGetSerializer(many=True, source='ingredients_in_recipes')
     is_favorited = SerializerMethodField()
     is_in_shopping_cart = SerializerMethodField()
 
@@ -157,9 +164,6 @@ class RecipeGetSerializer(ModelSerializer):         # передал в него
     def get_is_in_shopping_cart(self, recipe):
         request_user = self.context['request'].user
         return request_user.is_authenticated and ShoppingList.objects.filter(user=request_user, recipe=recipe).exists()
-
-
-#               POST
 
 
 class RecipeIngredientPostSerializer(ModelSerializer):
@@ -187,18 +191,13 @@ class RecipePostSerializer(ModelSerializer):
         model = Recipe
         fields = ('ingredients', 'tags', 'image', 'name', 'text', 'cooking_time')
 
-    
     def validate(self, data):
         for ingredient in data.get('ingredients_in_recipes'):
             if ingredient.get('amount') <= 0:
                 raise ValidationError({'amount': ('Количество должно быть не меньше 1 единицы измерения')})
         return data
 
-
     def create(self, validated_data):
-        print('=================================================')
-        print(validated_data)
-        print('=================================================')
         ingredients = validated_data.pop('ingredients_in_recipes')
         tags = validated_data.pop('tags')
         author = self.context.get('request').user
@@ -213,7 +212,6 @@ class RecipePostSerializer(ModelSerializer):
         recipe.save()
 
         return recipe
-
 
     def update(self, instance, validated_data):
 
@@ -230,21 +228,20 @@ class RecipePostSerializer(ModelSerializer):
             amount = ingredient.get('amount')
             instance.ingredients.add(ingredient_obj, through_defaults={'amount': amount})
 
-        super().update(instance, validated_data)        # name, image, text, cooking_time
+        # validated_data = name, image, text, cooking_time
+        super().update(instance, validated_data)
 
         instance.save()
         return instance
-
 
     def to_representation(self, instance):
         request = self.context.get('request')
         return RecipeGetSerializer(instance, context={'request': request}).data
 
 
-# ================================================================================================================
+# ===========================================================================
 #               Favorite
-# ================================================================================================================
-
+# ===========================================================================
 
 class FavoriteSerializer(ModelSerializer):
     class Meta:
@@ -264,10 +261,9 @@ class FavoriteSerializer(ModelSerializer):
         return SmallRecipeSerializer(recipe, context={'request': request}).data
 
 
-# ================================================================================================================
+# ===========================================================================
 #               ShoppingList
-# ================================================================================================================
-
+# ===========================================================================
 
 class ShoppingListSerializer(ModelSerializer):
     class Meta:

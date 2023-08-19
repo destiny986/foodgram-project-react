@@ -4,7 +4,6 @@ from .models import Ingredient, Tag, Recipe, RecipeIngredient, Favorite, Shoppin
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    # list_display = [field.name for field in YOURMODEL._meta.get_fields()]
     list_display = ('pk', 'name', 'measurement_unit')
     search_fields = ('name', 'measurement_unit')
     list_filter = ('name', 'measurement_unit')

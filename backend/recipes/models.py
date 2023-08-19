@@ -4,14 +4,14 @@ from django.core.exceptions import ValidationError
 from users.models import User
 
 
-# https://stackoverflow.com/questions/36330677/django-model-set-default-charfield-in-lowercase
-# будем сохранять в lowercase все NameField
 class NameField(models.CharField):
+    '''Будем сохранять в lowercase все NameField.'''
 
     def get_prep_value(self, value):
         return str(value).lower()
     
 def positive_not_zero(value):
+    '''Проверка на уровне модели (для админки).'''
     if value <= 0:
         raise ValidationError(
             ('Значение должно быть не меньше 1'),

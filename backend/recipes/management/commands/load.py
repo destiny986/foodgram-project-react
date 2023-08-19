@@ -1,8 +1,9 @@
 import csv
 from django.core.management import BaseCommand
+
 from recipes.models import Ingredient
 
-# https://stackoverflow.com/questions/49610125/whats-the-easiest-way-to-import-a-csv-file-into-a-django-model
+
 # python manage.py load --path ../data/ingredients.csv
 class Command(BaseCommand):
     help = 'Загружает ингредиенты'

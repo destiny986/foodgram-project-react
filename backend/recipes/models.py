@@ -137,6 +137,7 @@ class RecipeIngredient(models.Model):
             f" {self.amount} {self.ingredient.measurement_unit}"
         )
 
+
 class Favorite(models.Model):
     user = models.ForeignKey(
         User,

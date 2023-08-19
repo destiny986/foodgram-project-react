@@ -125,12 +125,12 @@ class RecipeFilterSet(FilterSet):
         fields = ("is_favorited", "is_in_shopping_cart", "author", "tags")
 
     def get_is_favorited(self, queryset, name, value):
-        if value == True:
+        if value is True:
             return Recipe.objects.filter(favorites__user=self.request.user)
         return Recipe.objects.exclude(favorites__user=self.request.user)
 
     def get_is_in_shopping_cart(self, queryset, name, value):
-        if value == True:
+        if value is True:
             return Recipe.objects.filter(shoppinglist__user=self.request.user)
         return Recipe.objects.exclude(shoppinglist__user=self.request.user)
 

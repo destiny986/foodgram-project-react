@@ -132,7 +132,7 @@ class FollowSerializer(ModelSerializer):
             try:
                 limit = int(limit)
                 recipes = author.recipes.all()[:limit]
-            except:
+            except (ValueError, AssertionError):
                 recipes = author.recipes.all()
         return SmallRecipeSerializer(recipes, many=True).data
 

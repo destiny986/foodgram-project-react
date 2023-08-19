@@ -6,13 +6,15 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0002_auto_20230808_1529'),
+        ("recipes", "0002_auto_20230808_1529"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recipe',
-            name='cooking_time',
-            field=models.PositiveSmallIntegerField(verbose_name='Время приготовления (минуты)'),
+            model_name="recipe",
+            name="cooking_time",
+            field=models.PositiveSmallIntegerField(
+                verbose_name="Время приготовления (минуты)"
+            ),
         ),
     ]

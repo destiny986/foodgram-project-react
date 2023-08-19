@@ -6,12 +6,14 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0003_alter_recipe_cooking_time'),
+        ("recipes", "0003_alter_recipe_cooking_time"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='ingredient',
-            constraint=models.UniqueConstraint(fields=('name', 'measurement_unit'), name='unique_ingredient'),
+            model_name="ingredient",
+            constraint=models.UniqueConstraint(
+                fields=("name", "measurement_unit"), name="unique_ingredient"
+            ),
         ),
     ]

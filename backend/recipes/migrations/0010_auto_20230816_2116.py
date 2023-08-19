@@ -6,16 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0009_auto_20230816_2012'),
+        ("recipes", "0009_auto_20230816_2012"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='favorite',
-            options={'verbose_name': 'Избранное'},
+            name="favorite",
+            options={"verbose_name": "Избранное"},
         ),
         migrations.RemoveField(
-            model_name='favorite',
-            name='add_date',
+            model_name="favorite",
+            name="add_date",
         ),
     ]

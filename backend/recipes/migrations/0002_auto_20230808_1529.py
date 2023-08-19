@@ -6,18 +6,25 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0001_initial'),
+        ("recipes", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='recipe',
-            name='cooking_time',
-            field=models.PositiveSmallIntegerField(verbose_name='Время приготовления (минут)'),
+            model_name="recipe",
+            name="cooking_time",
+            field=models.PositiveSmallIntegerField(
+                verbose_name="Время приготовления (минут)"
+            ),
         ),
         migrations.AlterField(
-            model_name='recipe',
-            name='image',
-            field=models.ImageField(blank=True, null=True, upload_to='recipe_images/', verbose_name='Картинка'),
+            model_name="recipe",
+            name="image",
+            field=models.ImageField(
+                blank=True,
+                null=True,
+                upload_to="recipe_images/",
+                verbose_name="Картинка",
+            ),
         ),
     ]

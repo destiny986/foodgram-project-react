@@ -6,12 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0006_alter_tag_name'),
+        ("recipes", "0006_alter_tag_name"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='tag',
-            options={'ordering': ['name'], 'verbose_name': 'Тег', 'verbose_name_plural': 'Теги'},
+            name="tag",
+            options={
+                "ordering": ["name"],
+                "verbose_name": "Тег",
+                "verbose_name_plural": "Теги",
+            },
         ),
     ]

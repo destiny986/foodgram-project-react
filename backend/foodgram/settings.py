@@ -1,14 +1,17 @@
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = (
-    "django-insecure-)!me*y5m_h+2f_yh7_pwrn^vkfi=s86r0-2ze1)x#c0gj9v5_j"
-)
+SECRET_KEY = os.getenv('TOKEN', 'biba')
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost',]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -56,9 +59,13 @@ TEMPLATES = [
 WSGI_APPLICATION = "foodgram.wsgi.application"
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('POSTGRES_DB', 'django'),
+        'USER': os.getenv('POSTGRES_USER', 'django_user'),
+        'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', 5432)
     }
 }
 
@@ -89,6 +96,12 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "collected_static"
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "/media"
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
@@ -116,3 +129,4 @@ DJOSER = {
         "user_list": ["rest_framework.permissions.AllowAny"],
     },
 }
+

@@ -31,14 +31,14 @@ class Ingredient(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=["name", "measurement_unit"], name="unique_ingredient"
-            )
-        ]
+                fields=("name", "measurement_unit"), name="unique_ingredient"
+            ),
+        )
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
-        ordering = ["name"]
+        ordering = ("name",)
 
     def __str__(self):
         return self.name
@@ -52,7 +52,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = "Тег"
         verbose_name_plural = "Теги"
-        ordering = ["name"]
+        ordering = ("name",)
 
     def __str__(self):
         return self.name
@@ -88,7 +88,7 @@ class Recipe(models.Model):
         "Описание",
     )
     cooking_time = models.PositiveSmallIntegerField(
-        "Время приготовления (минуты)", validators=[positive_not_zero]
+        "Время приготовления (минуты)", validators=(positive_not_zero,)
     )
     pub_date = models.DateTimeField(
         "Дата публикации",
@@ -96,7 +96,7 @@ class Recipe(models.Model):
     )
 
     class Meta:
-        ordering = ["-pub_date"]
+        ordering = ("-pub_date",)
         verbose_name = "Рецепт"
         verbose_name_plural = "Рецепты"
 
@@ -118,18 +118,18 @@ class RecipeIngredient(models.Model):
         verbose_name="Ингредиент",
     )
     amount = models.PositiveSmallIntegerField(
-        "Количество", validators=[positive_not_zero]
+        "Количество", validators=(positive_not_zero,)
     )
 
     class Meta:
         verbose_name = "Ингредиент в рецепте"
         verbose_name_plural = "Ингредиенты в рецепте"
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=["recipe", "ingredient"],
+                fields=("recipe", "ingredient"),
                 name="unique_ingredient_in_recipe",
-            )
-        ]
+            ),
+        )
 
     def __str__(self):
         return (
@@ -153,11 +153,11 @@ class Favorite(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=["user", "recipe"], name="unique_favorite"
-            )
-        ]
+                fields=("user", "recipe"), name="unique_favorite"
+            ),
+        )
         verbose_name = "Избранное"
 
     def __str__(self):
@@ -179,12 +179,12 @@ class ShoppingList(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=["user", "recipe"],
+                fields=("user", "recipe"),
                 name="unique_recipe_in_shoppinglist",
-            )
-        ]
+            ),
+        )
         verbose_name = "Список покупок"
         verbose_name_plural = "Списки покупок"
 

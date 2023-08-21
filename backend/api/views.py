@@ -69,7 +69,6 @@ class FollowUserViewSet(UserViewSet):
         object.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
 # ===========================================================================
 #               Ingredient
 # ===========================================================================
@@ -77,7 +76,6 @@ class FollowUserViewSet(UserViewSet):
 
 class IngredientFilter(SearchFilter):
     """Фильтр для поиска ингредиента по имени."""
-
     search_param = "name"
 
 
@@ -91,7 +89,6 @@ class IngredientsViewSet(ReadOnlyModelViewSet):
         "^name",
     ]
 
-
 # ===========================================================================
 #               Tags
 # ===========================================================================
@@ -103,7 +100,6 @@ class TagViewSet(ReadOnlyModelViewSet):
     permission_classes = (AllowAny,)
     pagination_class = None
 
-
 # ===========================================================================
 #               Recipes
 # ===========================================================================
@@ -111,7 +107,6 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 class RecipeFilterSet(FilterSet):
     """Доп. фильтр для рецептов."""
-
     is_favorited = BooleanFilter(method="get_is_favorited")
     is_in_shopping_cart = BooleanFilter(method="get_is_in_shopping_cart")
     tags = ModelMultipleChoiceFilter(

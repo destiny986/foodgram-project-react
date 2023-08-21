@@ -11,18 +11,14 @@ class CustomPermission(BasePermission):
 
     def has_permission(self, request, view):
         """Вызывается для всех запросов."""
-        if request.method in SAFE_METHODS or request.user.is_authenticated:
-            return True
-        return False
+        return request.method in SAFE_METHODS or request.user.is_authenticated
 
     def has_object_permission(self, request, view, obj):
         """
         Вызывается только при обращении к уже существующему объекту.
         """
-        if (
+        return (
             request.user.is_superuser
             or request.method in SAFE_METHODS
             or obj.author == request.user
-        ):
-            return True
-        return False
+        )

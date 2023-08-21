@@ -21,13 +21,9 @@ class User(AbstractUser):
         "Фамилия",
         max_length=255,
     )
-    password = models.CharField(
-        "Пароль",
-        max_length=255,
-    )
 
     class Meta:
-        ordering = ["username"]
+        ordering = ("username",)
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
@@ -50,11 +46,11 @@ class Follow(models.Model):
     )
 
     class Meta:
-        constraints = [
+        constraints = (
             models.UniqueConstraint(
-                fields=["user", "author"], name="unique_follow"
-            )
-        ]
+                fields=("user", "author"), name="unique_follow"
+            ),
+        )
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
 

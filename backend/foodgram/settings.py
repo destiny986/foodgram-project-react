@@ -11,7 +11,7 @@ SECRET_KEY = os.getenv('TOKEN', 'biba')
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost',]
+ALLOWED_HOSTS = ['foodzilla.ddns.net', '158.160.71.252', '127.0.0.1', 'localhost']
 
 INSTALLED_APPS = [
     "django.contrib.admin",

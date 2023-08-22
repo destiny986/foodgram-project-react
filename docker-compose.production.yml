@@ -1,0 +1,42 @@
+version: '3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  backend:
+    image: deniv/foodgram-project-react_backend
+    env_file: .env
+    volumes:
+      - static:/backend_static
+      - media:/media
+    depends_on:
+      - db
+
+  frontend:
+    env_file: .env
+    image: deniv/foodgram-project-react_frontend
+    command: cp -r /app/build/. /static/
+    volumes:
+      - static:/static
+
+  gateway:
+    image: deniv/foodgram-project-react_gateway
+    env_file: .env
+    ports:
+      - 8000:80
+    volumes:
+      - static:/backend_static
+      - static:/static
+      - media:/media
+    depends_on:
+      - db
